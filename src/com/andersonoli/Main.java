@@ -6,6 +6,7 @@ import java.util.Scanner;
 
 public class Main {
     private static final int[] pontuacoes = new int[12];
+    private static final boolean[] posicaoStrike = new boolean[12];
 
     public static void main(String[] args) {
         String nomeJogador;
@@ -31,6 +32,9 @@ public class Main {
                 entradaPontuacoes = scan.next();
 
                 if(entradaPontuacoes.contains("x")){
+                    // guarda a posição dos 'strikes' para o cálculo
+                    posicaoStrike[i] = true;
+
                     // caso um 'spare' tenha ocorrido na rodada anteior
                     // adicionar a pontuação da proxima jogada, neste caso foi um 'srike', então +10
                     if(ocorreuSpare){
@@ -78,13 +82,15 @@ public class Main {
         }
 
         System.out.println("\nO jogador " + nomeJogador + " pontuou: " + calcularPontuacao(pontuacoes));
+        System.out.println(Arrays.toString(pontuacoes));
+        System.out.println(Arrays.toString(posicaoStrike));
     }
 
     public static int calcularPontuacao(int[] pontuacao){
         int somaPontos = 0;
 
         for (int i = 0; i < pontuacao.length; i++) {
-            if(pontuacao[i] == 10 && i < 9){
+            if(posicaoStrike[i] && i < 9){
                 // bonus por strike
                 // 10 + bonus das duas proximas jogadas
                 somaPontos += 10 + (pontuacao[i+1] + pontuacao[i+2]);
