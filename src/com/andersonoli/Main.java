@@ -1,5 +1,6 @@
 package com.andersonoli;
 
+import java.util.Arrays;
 import java.util.Scanner;
 
 public class Main {
@@ -47,7 +48,9 @@ public class Main {
                     totalPontos += 20;
                 } else if(eStrike(i+1) && eStrike(i+2)){
                     totalPontos += 30;
-                } else {
+                } else if(eStrike(i+1) && eSpare(i+2)){
+                    totalPontos += 20 + valorJogada(i+2);
+                }  else {
                     totalPontos += 10 + valorRodada(i + 1);
                 }
             } else if(eSpare(i)){
@@ -69,9 +72,8 @@ public class Main {
             System.out.print("-- Rodada bônus: ");
             pontuacoes[i] = scan.next();
 
-            if(!pontuacoes[i].equals("x")){
-                break;
-            }
+            if(eStrike(9)) continue;
+            break;
         }
     }
 
