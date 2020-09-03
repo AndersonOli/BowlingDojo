@@ -1,121 +1,116 @@
 package com.andersonoli;
 
-import java.lang.reflect.Array;
-import java.util.Arrays;
 import java.util.Scanner;
 
 public class Main {
-    private static final int[] pontuacoes = new int[12];
-    private static final boolean[] posicaoStrike = new boolean[12];
+    private static final String[] pontuacoes = new String[12];
 
     public static void main(String[] args) {
-        String nomeJogador;
-        String entradaPontuacoes;
-
-        int pontuacaoRodada;
-        boolean ocorreuSpare = false;
-
         Scanner scan = new Scanner(System.in);
 
-        System.out.println("-- Seja bem vindo(a) ao Boliche Counter --\n");
-        System.out.print("Insira o nome do jogador: ");
-        nomeJogador = scan.nextLine();
+        System.out.println("Verifique abaixo as maneiras de entrar com os dados do jogo:\n");
 
-        System.out.println("\n-- Ok! Informe abaixo, a pontuação do jogador " + nomeJogador + " na rodada --");
+        System.out.printf("%-12s- ", "0");
+        System.out.println("Falta ou zero pinos derrubados");
 
-        for (int i = 0; i < 10; i++) { // loop de 'frames'
-            pontuacaoRodada = 0;
-            System.out.println("Rodadada #" + (i+1));
+        System.out.printf("%-12s- ", "x");
+        System.out.println("Strike");
 
-            for (int j = 0; j < 2; j++) { // loop de arremessos
-                System.out.print("-- Arremesso " + (j+1) + ": ");
-                entradaPontuacoes = scan.next();
+        System.out.printf("%-12s- ", "[número]/");
+        System.out.println("Spare ( Ex.: 4/ = 'spare' )");
 
-                if(entradaPontuacoes.contains("x")){
-                    // guarda a posição dos 'strikes' para o cálculo
-                    posicaoStrike[i] = true;
+        System.out.printf("%-12s- ", "[número]-");
+        System.out.println("Arremesso com perca ( Ex.: 9- )");
 
-                    // caso um 'spare' tenha ocorrido na rodada anteior
-                    // adicionar a pontuação da proxima jogada, neste caso foi um 'srike', então +10
-                    if(ocorreuSpare){
-                        pontuacoes[i - 1] += 10; // +10 para a jogada anterior
-                        ocorreuSpare = false;
-                    } else if(i == 9){
-                        // 10° rodada, tem-se um bônus por ter feito 'strike'
-                        // podendo jogar mais uma ou duas vezes
-                        calcularBonus();
-                    }
+        for (int i = 0; i < 10; i++) {
+            System.out.println("\nRodada #" + (i + 1));
+            System.out.print(":: ");
+            pontuacoes[i] = scan.next();
 
-                    pontuacaoRodada = 10;
-                    break;
-                } else if(j == 1 && entradaPontuacoes.contains("/")){
-                    // em caso de 'spare' e caso seja a última rodada,
-                    // tem-se o bônus de mais uma ou duas jogadas
-                    if(i == 9){
-                        pontuacaoRodada = 10;
-                        calcularBonus();
-                        break;
-                    }
+            // Na 10° rodada, em caso de 'spare' ou 'strike'
+            // Direito a uma ou mais duas jogadas
+            if(i == 9 && (eStrike(i) || eSpare(i))){
+                calcularBonus();
+            }
+        }
 
-                    // em caso de 'spare', a rodada vale 10 pontos
-                    // mais os pontos da proxima jogada
-                    pontuacaoRodada = 10;
-                    ocorreuSpare = true;
+        System.out.println("\nPontuação total: " + calcularPontuacao());
+    }
+
+    // Retorna a pontuação total do jogo de acordo com as regras
+    public static int calcularPontuacao(){
+        int totalPontos = 0;
+
+        for (int i = 0; i < 10; i++) {
+            if(eStrike(i)){
+                if(eSpare(i+1)){
+                    totalPontos += 20;
+                } else if(eStrike(i+1) && eStrike(i+2)){
+                    totalPontos += 30;
                 } else {
-                    try {
-                        if(ocorreuSpare){
-                            // +quantidade de pontos feita na jogada subsequente
-                            // para a rodada anterior
-                            pontuacoes[i - 1] += Integer.parseInt(entradaPontuacoes);
-                        }
-
-                        pontuacaoRodada += Integer.parseInt(entradaPontuacoes);
-                    } catch (NumberFormatException e) {
-                        break;
-                    }
-
-                    ocorreuSpare = false;
+                    totalPontos += 10 + valorRodada(i + 1);
                 }
+            } else if(eSpare(i)){
+                totalPontos += 10 + valorJogada(i + 1);
+            } else {
+                totalPontos += valorRodada(i);
             }
-
-            pontuacoes[i] = pontuacaoRodada;
         }
 
-        System.out.println("\nO jogador " + nomeJogador + " pontuou: " + calcularPontuacao(pontuacoes));
-        System.out.println(Arrays.toString(pontuacoes));
-        System.out.println(Arrays.toString(posicaoStrike));
+        return totalPontos;
     }
 
-    public static int calcularPontuacao(int[] pontuacao){
-        int somaPontos = 0;
-
-        for (int i = 0; i < pontuacao.length; i++) {
-            if(posicaoStrike[i] && i < 9){
-                // bonus por strike
-                // 10 + bonus das duas proximas jogadas
-                somaPontos += 10 + (pontuacao[i+1] + pontuacao[i+2]);
-                continue;
-            }
-
-            somaPontos += pontuacao[i];
-        }
-
-        return somaPontos;
-    }
-
+    // Obs.: os índices 10, 11 do array 'posicoes'
+    // estão reservados a pontuação bônus
     public static void calcularBonus(){
-        int posicao = 10;
         Scanner scan = new Scanner(System.in);
 
-        while (posicao != 12){
-            System.out.print("-- Pontuação na rodada bônus: ");
-            String entrada = scan.next();
+        for (int i = 10; i < 12; i++) {
+            System.out.print("-- Rodada bônus: ");
+            pontuacoes[i] = scan.next();
 
-            if(entrada.equals("x")){
-                pontuacoes[posicao++] = 10;
-            } else {
-                pontuacoes[posicao] = Integer.parseInt(entrada);
+            if(!pontuacoes[i].equals("x")){
                 break;
+            }
+        }
+    }
+
+    // verifica se a jogada é um 'spare'
+    public static boolean eSpare(int posicao){
+        return pontuacoes[posicao].contains("/");
+    }
+
+    // verifica se a jogada é um 'strike'
+    public static boolean eStrike(int posicao){
+        return pontuacoes[posicao].contains("x");
+    }
+
+    // retorna o valor de uma 'jogada'
+    public static int valorJogada(int posicao){
+        String rodada = pontuacoes[posicao];
+
+        try {
+            return Integer.parseInt(rodada.substring(0, 1));
+        } catch (Exception e){
+            if(eStrike(posicao)) return 10;
+        }
+
+        return 0;
+    }
+
+    // retorna o valor de 'frames normais'
+    public static int valorRodada(int posicao){
+        String rodada = pontuacoes[posicao];
+
+        if(rodada.contains("/") || rodada.contains("x")){
+            return 10;
+        } else if(rodada.contains("-")) {
+            return Integer.parseInt(rodada.substring(0, 1));
+        } else {
+            try {
+                return Integer.parseInt(rodada.substring(0, 1)) + Integer.parseInt(rodada.substring(1, 2));
+            } catch (Exception e) {
+                return Integer.parseInt(rodada.substring(0, 1));
             }
         }
     }
